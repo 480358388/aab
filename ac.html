@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>炫酷文本处理工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366F1',
+                        secondary: '#10B981',
+                        dark: '#111827',
+                        darker: '#0F172A',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass-effect {
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+            }
+            .text-shadow {
+                text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            }
+            .border-glow {
+                box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-dark to-darker min-h-screen font-inter text-gray-200 overflow-x-hidden">
+    <!-- 背景装饰 -->
+    <div class="fixed inset-0 z-0 opacity-20">
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/30 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/30 rounded-full blur-[100px]"></div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 页面标题 -->
+        <header class="mb-8 text-center">
+            <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-white text-shadow mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                文本处理工具
+            </h1>
+            <p class="text-gray-400 text-lg">高效处理你的文本内容</p>
+        </header>
+
+        <!-- 核心功能区（输入 + 洗涤按钮 + 输出） -->
+        <div class="mb-8 flex flex-col lg:flex-row items-center gap-8">
+            <!-- 输入区域 -->
+            <div class="w-full lg:w-1/2 bg-dark/80 glass-effect rounded-xl p-6 border border-gray-700/50 border-glow transition-all duration-300 hover:border-primary/50">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fa fa-pencil-square-o text-primary mr-2"></i>
+                    输入文本
+                </h2>
+                <textarea 
+                    id="inputText" 
+                    class="w-full h-64 bg-gray-800/80 border border-gray-700 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none text-gray-200"
+                    placeholder="请在这里输入需要处理的文本内容...例如：C1=CC=CC=C1;CH3COOH,HOH;C1(=O)C(=O)O"></textarea>
+            </div>
+
+            <!-- 洗涤功能按钮 -->
+            <div class="lg:flex lg:flex-col lg:items-center gap-4">
+                <button 
+                    id="uppercaseBtn" 
+                    class="bg-primary/90 hover:bg-primary text-white rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 w-40 h-40">
+                    <i class="fa fa-arrow-up text-2xl mb-2"></i>
+                    <span>洗涤分子</span>
+                </button>
+            </div>
+
+            <!-- 输出区域：仅保留过滤后的有效SMILES -->
+            <div class="w-full lg:w-1/2 bg-dark/80 glass-effect rounded-xl p-6 border border-gray-700/50 border-glow transition-all duration-300 hover:border-purple-500/50">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fa fa-check-circle text-purple-500 mr-2"></i>
+                    洗涤后结果（过滤无效）
+                </h2>
+                <textarea 
+                    id="validSmilesText" 
+                    class="w-full h-64 bg-gray-800/80 border border-gray-700 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all resize-none text-gray-200"
+                    placeholder="洗涤后的有效SMILES将显示在这里..." readonly></textarea>
+                <div class="mt-4 flex justify-end">
+                    <button 
+                        id="copyValidBtn" 
+                        class="bg-purple-600/90 hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
+                        <i class="fa fa-copy mr-2"></i>
+                        复制结果
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 其他功能区 -->
+        <div class="bg-dark/80 glass-effect rounded-xl p-6 border border-gray-700/50 border-glow transition-all duration-300 mb-8">
+            <h2 class="text-xl font-semibold mb-6 flex items-center">
+                <i class="fa fa-cogs text-primary mr-2"></i>
+                其他功能
+            </h2>
+            
+            <div class="flex justify-center items-center gap-8 py-4 w-full">
+                <button id="evaluationBtn" class="bg-gray-800 hover:bg-primary/90 text-white rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 w-40 h-40">
+                    <i class="fa fa-bar-chart text-2xl mb-2"></i>
+                    <span>Evaluation</span>
+                </button>
+                
+                <button id="screeningBtn" class="bg-gray-800 hover:bg-primary/90 text-white rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 w-40 h-40">
+                    <i class="fa fa-filter text-2xl mb-2"></i>
+                    <span>Screening</span>
+                </button>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button id="resetBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center justify-center mx-auto transition-all duration-300">
+                    <i class="fa fa-refresh mr-2"></i>
+                    重置所有内容
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const validSmilesText = document.getElementById('validSmilesText');
+        const copyValidBtn = document.getElementById('copyValidBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        $(document).ready(function(){
+            // 洗涤分子核心逻辑
+            $('#uppercaseBtn').click(function(){
+                let inputText = $('#inputText').val().trim();
+               
+                if (!inputText) {
+                    alert('请输入需要处理的文本内容！');
+                    return;
+                }
+
+                // 括号匹配逻辑
+                function replaceBracketsWithPlaceholder(text) {
+                    const placeholders = [];
+                    let index = 0;
+                    let result = text;
+                    let start = -1;
+                    let bracketCount = 0;
+
+                    for (let i = 0; i < result.length; i++) {
+                        if (result[i] === '(') {
+                            if (bracketCount === 0) start = i;
+                            bracketCount++;
+                        } else if (result[i] === ')') {
+                            bracketCount--;
+                            if (bracketCount === 0 && start !== -1) {
+                                const bracketContent = result.substring(start, i + 1);
+                                const key = `__BRACKET_${index++}__`;
+                                placeholders.push({ key, value: bracketContent });
+                                result = result.substring(0, start) + key + result.substring(i + 1);
+                                i = start + key.length - 1;
+                                start = -1;
+                            }
+                        }
+                    }
+                    return { processedText: result, placeholders };
+                }
+
+                // 步骤1：处理括号
+                const { processedText, placeholders } = replaceBracketsWithPlaceholder(inputText);
+
+                // 步骤2：分割（不分割等号）
+                const splitRegex = /[;,\/\\\|\s]+/;
+                let splitArray = processedText.split(splitRegex).filter(item => item.trim() !== '');
+
+                // 步骤3：还原括号
+                splitArray = splitArray.map(item => {
+                    let result = item;
+                    placeholders.forEach(({ key, value }) => {
+                        result = result.replaceAll(key, value);
+                    });
+                    return result;
+                });
+
+                // 步骤4：调用接口并过滤无效SMILES
+                if (splitArray.length > 0) {
+                    let params = { "SMILES": splitArray };
+                    validSmilesText.value = '';
+                    
+                    $.ajax({
+                        url: 'https://admetlab3.scbdd.com/api/washmol',
+                        type: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        data: JSON.stringify(params),
+                        dataType: 'json',
+                        success: function(response){
+                            console.log('接口响应：', response);
+                            
+                            let validSmiles = [];
+                            
+                            if (Array.isArray(response)) {
+                                validSmiles = response.filter(item => 
+                                    item && item !== 'Invalid SMILES' && !item.includes('Invalid SMILES')
+                                );
+                            } else if (response.data && Array.isArray(response.data)) {
+                                validSmiles = response.data.filter(item => 
+                                    item && item !== 'Invalid SMILES' && !item.includes('Invalid SMILES')
+                                );
+                            } else if (response.washmol && Array.isArray(response.washmol)) {
+                                validSmiles = response.washmol.filter(item => 
+                                    item && item !== 'Invalid SMILES' && !item.includes('Invalid SMILES')
+                                );
+                            }
+                            
+                            validSmilesText.value = validSmiles.join('\n');
+                            
+                            if (validSmiles.length === 0) {
+                                alert('处理完成，但未找到有效SMILES');
+                            } else {
+                                alert(`处理完成！有效SMILES：${validSmiles.length} 个`);
+                            }
+                        },
+                        error: function(xhr, status, error){
+                            console.error('请求失败:', error);
+                            alert('接口请求失败，请检查网络或稍后重试');
+                        }
+                    });
+                }
+            });
+
+            // Evaluation
+            $('#evaluationBtn').click(function(){
+                window.open('https://admetlab3.scbdd.com/server/evaluation', '_blank');
+            });
+
+            // Screening
+            $('#screeningBtn').click(function(){
+                window.open('https://admetlab3.scbdd.com/server/screening', '_blank');
+            });
+
+            // 复制结果
+            copyValidBtn.addEventListener('click', () => {
+                if (validSmilesText.value) {
+                    navigator.clipboard.writeText(validSmilesText.value)
+                        .then(() => alert('复制成功！'))
+                        .catch(err => alert('复制失败，请手动复制'));
+                } else {
+                    alert('暂无内容可复制');
+                }
+            });
+
+            // 重置
+            resetBtn.addEventListener('click', () => {
+                document.getElementById('inputText').value = '';
+                validSmilesText.value = '';
+            });
+        });
+    </script>
+</body>
+</html>
